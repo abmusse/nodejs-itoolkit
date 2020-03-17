@@ -3,22 +3,22 @@
 ## Table of Contents <!-- omit in toc -->
 - [Introduction](#Introduction)
   - [Installation](#Installation)
-- [Class Connection](#Class-Connection)
-  - [Constructor: Connection(optionsOrDb[, username, password, restOptions])](#Constructor-ConnectionoptionsOrDb-username-password-restOptions)
-      - [Syntax 1: Connection(options)](#Syntax-1-Connectionoptions)
-        - [idb-connector transportOptions](#idb-connector-transportOptions)
-        - [rest transportOptions](#rest-transportOptions)
-        - [ssh transportOptions](#ssh-transportOptions)
-        - [odbc transportOptions](#odbc-transportOptions)
-      - [Syntax 2: Connection(database, username, password [,restOptions])](#Syntax-2-Connectiondatabase-username-password-restOptions)
-  - [Connection.add(input)](#Connectionaddinput)
-  - [Connection.debug([flag])](#Connectiondebugflag)
-  - [Connection.getTransportOptions()](#ConnectiongetTransportOptions)
-  - [Connection.run(callback)](#Connectionruncallback)
-- [Class: CommandCall](#Class-CommandCall)
-    - [Example](#Example)
-  - [Constructor: CommandCall(config)](#Constructor-CommandCallconfig)
-  - [CommandCall.toXML()](#CommandCalltoXML)
+- [Class Connection](#class-connection)
+  - [Constructor: Connection(optionsOrDb[, username, password, restOptions])](#constructor-connectionoptionsordb-username-password-restoptions)
+      - [Syntax 1: Connection(options)](#syntax-1-connectionoptions)
+        - [idb-connector transport options](#idb-connector-transport-options)
+          - [Using idb-connector transport](#using-idb-connector-transport)
+        - [REST transport options](#rest-transport-options)
+          - [Using REST transport](#using-rest-transport)
+        - [SSH transport options](#ssh-transport-options)
+          - [Using SSH transport](#using-ssh-transport)
+        - [ODBC transport options](#odbc-transport-options)
+          - [Using ODBC transport](#using-odbc-transport)
+      - [Syntax 2: Connection(database, username, password [,restOptions])](#syntax-2-connectiondatabase-username-password-restoptions)
+  - [Connection.add(input)](#connectionaddinput)
+  - [Connection.debug([flag])](#connectiondebugflag)
+  - [Connection.getTransportOptions()](#connectiongettransportoptions)
+  - [Connection.run(callback)](#connectionruncallback)
 - [Class ProgramCall](#Class-ProgramCall)
   - [Example](#Example-1)
   - [Constructor: ProgramCall(program[, options])](#Constructor-ProgramCallprogram-options)
@@ -148,8 +148,6 @@ The Connection constructor can be accessed in two ways.
 
 As of version 1.0.0 the propery way to create a Connection is to pass an `options` object.
 
-Syntax 2 remains in place only to support depreciated [iConn](#iConn) signature.
-
 #### Syntax 1: Connection(options)
 
 **Parameters:**
@@ -158,12 +156,12 @@ Syntax 2 remains in place only to support depreciated [iConn](#iConn) signature.
       - Valid values for transport are `(idb, rest, ssh, odbc)`
    - **returnError** `boolean` used to adjust error reporting from `Connection.run()`.
      - by default this set to `true` to allow `Connection.run(error, xmlOutput)`
-     - before version 1.0.0 error where not appened to the `.run()` callback.
-   - **transportOptions** `<object>` configuration options passed the transport.
+     - prior to v1.0.0 errors were not not returned within the `Connection.run()` callback.
+   - **transportOptions** `<object>` configuration options passed to the transport.
 
 Valid transportOptions vary based on the transport used.
 
-##### idb-connector transportOptions
+##### idb-connector transport options
 
 | Key      | Type    | Value       |
 | -----    | ----    | ----------- |
@@ -175,8 +173,18 @@ Valid transportOptions vary based on the transport used.
 | xslib    | string  | The XMLSERVICE library to use.<br>This key is optional and defaults to `QXMLSERV` |
 | verbose  | boolean | Turns on verbose output printed to stdout.<br>This key is optional and defaults to `false` |
 
+###### Using idb-connector transport
 
-##### rest transportOptions
+```js
+const { Connection } = require("itoolkit");
+
+const connection = new Connection({
+  transport: 'idb',
+  transportOptions: { database: '*LOCAL', username: 'myuser', password: 'mypass' }
+});
+```
+
+##### REST transport options
 
 | Key      | Type    | Value       |
 | -----    | ----    | ----------- |
@@ -189,68 +197,27 @@ Valid transportOptions vary based on the transport used.
 | port     | string  | The host server's port.<br>This key is optional and defaults to `80` |
 | path     | string  | The path on the host server to make the request<br>This key is optional and defaults to `/` |
 
-##### ssh transportOptions
-
-For a complete list of ssh transport options refer to the [ssh2 Client.connect()](https://www.npmjs.com/package/ssh2#client-methods).
-
-##### odbc transportOptions
-
-| Key      | Type    | Value |
-| -----    | ----    | ----------- |
-| host     | string  | The system to connect to<br>This is required and defaults to `localhost` |
-| database | string  | The database to connect to. Use special `*LOCAL` value for a local database.<br> This key is required |
-| username | string  | The database user.<br>This key is required. |
-| password | string  | The database user's password.<br>This key is required. |
-| dsn      | string  | The database source name to use. Refer to the [knowledge center](https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/rzaik/connectkeywords.htm) for a list of valid options.<br>This key is optional. |
-| xslib    | string  | The XMLSERVICE library to use.<br>This key is optional and defaults to `QXMLSERV` |
-| ipc      | string  | The ipc key name/security route to XMLSERVICE job.<br>This key is optional and defaults to `*NA` |
-| ctl      | string  | The control keywords for operator control over XMLSERVICE jobs.<br>This key is optional and defaults to `*here`|
-
-
-#### Syntax 2: Connection(database, username, password [,restOptions])
-
-**Parameters:**
-- **database** `<string>` the database to connect to. Use special `*LOCAL` value for a local database
-- **username** `<string>`  the database user
-- **password** `<string>`  the database user's password
-- **[restOptions]** `<object>` the configuration options for the REST transport. See [rest transportOptions](#rest-transportOptions).
-
-**Returns:**
-
-`<object>` a Connection object.
-
-**Example Using idb-connector transport:**
-
-```js
-const { Connection } = require("itoolkit");
-
-const connection = new Connection({
-  transport: 'idb',
-  transportOptions: { database: '*LOCAL', username: 'myuser', password: 'mypass' }
-});
-
-```
-
-**Example Using REST transport:**
+###### Using REST transport
 
 ```js
 const connection = new Connection({
   transport: 'rest',
-  transportOptions: { host: 'myhost', port: 80, path:'/cgi-bin/xmlcgi.pgm' database: '*LOCAL', username: 'myuser', password: 'mypass' }
+  transportOptions: {
+      host: 'myhost',
+	  port: 80,
+	  path:'/cgi-bin/xmlcgi.pgm',
+	  database: '*LOCAL',
+	  username: 'myuser',
+	  password: 'mypass', 
+  },
 });
 ```
 
-**Example Using SSH transport:**
+##### SSH transport options
 
-```js
-const { Connection } = require("itoolkit");
+Refer to the [ssh2 Client.connect API](https://www.npmjs.com/package/ssh2#client-methods).
 
-const connection = new Connection({
-  transport: 'ssh',
-  transportOptions: { host: 'myhost', username: 'myuser', privateKey, passphrase: 'myphrase' }
-});
-
-```
+###### Using SSH transport
 
 ```js
 const connection = new Connection({
@@ -258,11 +225,40 @@ const connection = new Connection({
   transportOptions: { host: 'myhost', username: 'myuser', password: 'mypassword' }
 });
 ```
+```js
+const { readFileSync } = require('fs');
 
-**Example Using ODBC transport:**
+const privateKey = readFileSync('path/to/privateKey', 'utf-8');
+
+// NOTE if your privateKey also requires a passphrase provide it
+
+const connection = new Connection({
+  transport: 'ssh',
+  transportOptions: {
+    host: 'myhost',
+    username: 'myuser',
+    privateKey,
+    passphrase: 'myphrase' }
+});
+```
+
+##### ODBC transport options
+
+| Key      | Type    | Value |
+| -----    | ----    | ----------- |
+| host     | string  | The system to connect to<br>This is required and defaults to `localhost` |
+| database | string  | The database to connect to.<br>Use `*LOCAL` for a local database.<br> This key is required |
+| username | string  | The database user.<br>This key is required. |
+| password | string  | The database user's password.<br>This key is required. |
+| dsn      | string  | The database source name to use.<br>Refer to the [knowledge center](https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_73/rzaik/connectkeywords.htm) for a list of valid options.<br>This key is optional. |
+| xslib    | string  | The XMLSERVICE library to use.<br>This key is optional and defaults to `QXMLSERV` |
+| ipc      | string  | The ipc key name/security route to XMLSERVICE job.<br>This key is optional and defaults to `*NA` |
+| ctl      | string  | The control keywords for operator control over XMLSERVICE jobs.<br>This key is optional and defaults to `*here`|
+
+###### Using ODBC transport
 
 ```js
-const { Connection } = require("itoolkit");
+const { Connection } = require('itoolkit');
 
 const connection = new Connection({
   transport: 'odbc',
@@ -272,7 +268,7 @@ const connection = new Connection({
 ```
 
 ```js
-const { Connection } = require("itoolkit");
+const { Connection } = require('itoolkit');
 
 const connection = new Connection({
   transport: 'odbc',
@@ -281,11 +277,26 @@ const connection = new Connection({
 
 ```
 
+#### Syntax 2: Connection(database, username, password [,restOptions])
+
+Syntax 2 remains in place only to support deprecated [iConn](#iConn) signature.
+
+**Parameters:**
+- **database** `<string>` the database to connect to. Use special `*LOCAL` value for a local database
+- **username** `<string>`  the database user
+- **password** `<string>`  the database user's password
+- **[restOptions]** `<object>` the configuration options for the REST transport. See [rest transportOptions](#rest-transport-options).
+
+**Returns:**
+
+`<object>` The constucted Connection object.
+
+
 ## Connection.add(input)
 
 **Description:**
 
-Adds XML request to the command list
+Adds XML request to the command list.
 
 **Syntax:**
 
@@ -334,18 +345,6 @@ Syntax 2: debug(flag)
 
 For Syntax 1, `<boolean>` value indicating whether verbose mode is enabled or not.
 
-**Example:**
-
-```js
-const { Connection } = require("itoolkit");
-
-const connection = new Connection({
-  transport: 'ssh',
-  transportOptions: { host: 'myhost', username: 'myuser', password: 'mypassword' }
-});
-
-connection.debug(true);
-```
 
 ## Connection.getTransportOptions()
 
@@ -361,19 +360,6 @@ getTransportOptions()
 
 `<object>` the transportOptions property from Connection object.
 
-**Example:**
-
-```js
-const { Connection } = require('itoolkit');
-
-const connection = new Connection({
-  transport: 'ssh',
-  transportOptions: { host: 'myhost', username: 'myuser', password: 'mypassword' }
-});
-
-console.log(connection.getTransportOptions());
-```
-
 ## Connection.run(callback)
 
 **Description:**
@@ -382,9 +368,9 @@ Builds the xml input that will passed to the transport by iterationing over the 
 
 Then invokes the desired transport with the xml input.
 
-Once the transport is done the user provided callback is called with `error` and `xmlOutput` added as parameters.
+Once the transport is done the user provided callback is inoked with `error` and `xmlOutput` added as parameters.
 
-If the Connection object was created using [syntax 2](#Syntax-2-Connectiondatabase-username-password-restOptions) `xmlOutput` is the only parameter added to the user provided callback.
+If the Connection object was created using [syntax 2](#Syntax-2-Connectiondatabase-username-password-restOptions) `xmlOutput` is the only parameter added to the callback.
 
 
 **Syntax:**
@@ -393,9 +379,9 @@ run(callback)
 
 **Parameters:**
 
-- **callback** `<function>` The specified call back function to handle the execution result. output is the output XML document from XMLSERVICE program.
-- The first parameter added to the callback is `error`. This is an `Error` object when a transport error occurs or `null`.
-- The second parameter added to the callback is `xmlOutput`, the raw XML returned from XMLSERVICE.
+- **callback** `<function>` The user provided function to process the xml output returned from XMLSERVICE.
+  - The first parameter added to the callback is `error`. This is an `Error` object when a transport error occurs or `null`.
+  - The second parameter added to the callback is `xmlOutput`, the raw XML returned from XMLSERVICE.
 
 **Example:**
 
